@@ -1,0 +1,157 @@
+@startuml Diagram
+
+class MonoBehaviour
+
++class Internal{
+    {static} +GetArrayOfAllCardTypes_String() : string[] // Возвращает массив наименований типов всех возможных карт
+    {static} +GetRandomValueFromRange_Int(int Min, int Max) : int // Возвращает случайное целое число в заданном диапазоне
+    {static} +GetDictionaryOfAllCardCovers_Dictionary() : Dictionary<string, Sprite> // Возвращает словарь спрайтов для карточек по их наименованиям в качестве ключа
+    {static} +GetArrayOfCardsOnTable() : GameObject[] // Возвращает массив всех карточек, расположенных на поле 
+}
++class Settings{
+    +MouseSpeed : float // Переменная, хранящая скорость преследования карточки за указателем мыши
+    + MP : int // Переменная, хранящая максимальное количество очков действия
+    -Awake() : void // Записывает вышеописанные переменные в префсы
+} 
++class TurnManager{
+    {static} +CardsPosGo : GameObject[] // Переменная, хранящая объекты, положения которых используются при создании карт "спавн поинты"
+    +ArrayOfCards : GameObject[] // Переменная, хранящая массив карточек
+    {static} +Cards : GameObject[] // Переменная, хранящая массив карточек
+    {static} +MP_Text : TMP_Text // Переменная, хранящая текст очков дейстия
+    {static} +Start_MP : int // Переменная, хранящая начальное количество очков действия
+    {static} +PlayerTurn = false : bool // Переменная, хранящая булевское значение, является ли текущий ход - ходом игрока
+    {static} +TM : TurnManager // Переменная, хранящая текущий статический класс
+    -Start() : void // Обновление очков действия и заполнение выбора карточек
+    {static} +SpawnNewCards() : IEnumerator // Удаление текущих карточек со стола и создание новых
+    {static} +DestroyCardsOnTable() : void // Удаление всех карточек с тегом Card
+    {static} +Update_MP_Counter() : void // Обновление интерфейса очков действия "ОД" и создание новых карточек, при условии, что ОД = 0
+    {static} +MP_Manager(int AddValue = 0, int RemoveValue = 0) : void // инкремент - декремент очков действия
+}
++class HotButton{
+    +Update() : void // Обработка нажатий на клавиатуру
+    {static} +Slide(bool ToEnemy = true) : void // Активация действия карт "на врага или игрока", их удаление
+    {static} +ToEnemy() : void // Выполнение Slide на Врага
+    {static} +ToPlayer() : void Выполнение Slide на Игрока
+}
++class HealthManager{
+    {static} +PHealth : TMP_Text // Переменная, хранящая текст очков здоровья игрока
+    {static} +EHealth : TMP_Text // Переменная, хранящая текст очков здоровья врага
+    {static} +MaxPlayerHP = 100 : int // Переменная, хранящая максимальное количество очков здоровья игрока
+    {static} +MinPlayerHP = 0 : int // Переменная, хранящая минимальное количество очков здоровья игрока
+    {static} +MaxEnemyHP = 100 : int // Переменная, хранящая максимальное количество очков здоровья врага
+    {static} +MinEnemyHP = 0 : int // Переменная, хранящая минимальное количество очков здоровья врага
+    {static} +StopDamageEnemy = false : bool // Переменная, хранящая булевское значение, можно ли наносить урон врагу
+    {static} +StopHealPlayer = false : bool // Переменная, хранящая булевское значение, можно ли лечить игрока
+    -Start() : void // Заполнение PHealth EHealth
+    {static} +Heal(int Value) : void // Лечение игрока
+    {static} +Damage(int Value) : void // Нанесение урона врагу
+}
++abstract class BaseForActions{
+    +PowerMultiplyValue = 1 : int // Множитель силы действия карточки
+    {abstract} +SetPowerMultiplyValue(int value = 1) : void // Установка PowerMultiplyValue
+    {abstract} +Actions(bool ToEnemy = false) : void // Действие карточки
+}
++class HealAction{
+    +SetPowerMultiplyValue(int value = 1) : void // Множитель силы действия карточки
+    +Actions(bool ToEnemy = false) : void // Лечение игрока 
+}
++class Desk{
+    {static} +DeskTransform : Transform // Переменная для хранения положения
+    {static} +CardsCount = 0 : int // Переменная для хранения количества карт
+    {static} +CardsOnDesk : GameObject[] // Переменная для хранения карт
+    {static} +BC2D : BoxCollider2D // Переменная для хранения коллайдера
+    -Start() : void // Заполнение DeskTransform и BC2D
+    {static} +SetCardOnDesk(GameObject Card) : void // Устанавливает карту на поле и отнимает соответствующее количество очков действия
+    {static} +UpdateDesk() : void // Меняет расположение карт на поле
+    {static} +CreatePossiblePlace(int CardsCount, float step = 1.5f) : Vector2[] // Возвращает массив положений для расположения карт на поле
+
+}
++class Card{
+    +CardController : BaseForCards // Контроллер для взаимодействия с карточкой [свойства]
+    +MouseCountroller : GrabCardMouse // Контроллер для взаимодействия с карточкой [движение]
+    +ActionsController : BaseForActions // Контроллер для взаимодействия с карточкой [действие]
+    -Awake() : void // Вызов Initialize
+    +SetControllers() : void // Случайный выбор типа карточки и присвоение контроллеров
+    +Initialize() : void // Вызов SetControllers и окончательная настройка карточки [спрайт]
+}
++class CardStart{
+    +InitializePrice() : void // Установка цены ОД
+    +GetSizeMultipler_Float() : float // Возврат множителя размера
+    +GetCover_Sprite() : Sprite // Возврат спрайта для отображения карточки
+}
++abstract class BaseForCards{
+    +ManaCost : int // Очки действия ОД
+    +Visual : Sprite // Спрайт, который будет присвоен карточке
+    {abstract} +InitializePrice() : void // Установка цены
+    {abstract} +GetSizeMultipler_Float() : float // Возврат размера
+    {abstract} +GetCover_Sprite() : Sprite // Возврат спрайта
+} 
++class StartCard{
+    +InitializePrice() : void // Установка цены ОД
+    +GetSizeMultipler_Float() : float // Возврат множителя размера
+    +GetCover_Sprite() : Sprite // Возврат спрайта для отображения карточки
+}
++class CardsCombineManager{
+    +TotalHeal = 0 : int // Итоговое лечение
+    +TotalDamage = 0 : int // Итоговый урон
+    +TotalMultiply = 1 : int // Итоговый множитель
+    +CardsToTurn : GameObject[] // Массив карточек которые совершают ход
+    +StartTurn() : void // Вызов CalculateHeal
+    +CalculateHeal() : void // Подсчет TotalHeal [в будущем]
+}
++class GrabCardMouse{
+    -InDrag = false : bool // Перетаскиваем карточку
+    -MousePos : Vector3 // Позиция курсора мыши
+    -MouseSpeed : float // Скорость следования карточки за мышью
+    -RealStartPoz : Vector3 // Начальное положение карточки
+    +StartPose : Vector3 // Положение карточки в которое она может вернуться
+    +StartScale : Vector3 // Размер карточки в которое она может вернуться
+    +EndScale : Vector3 // Размер карточки к которому она стремится
+    -FromDesk = false : bool // Карточка снята с доски
+    -CurrentColiderTag : string // Текущий колайдер карточки
+    -SR : SpriteRenderer
+    -Glow : GameObject // Подложка, которая отвечает за свечение карточки при её выборе
+    -OnMouseDown() : void // Нажатие кнопки мыши, включение подложки и отрисовка карты поверх других
+    -OnMouseUp() : void // Отжатие кнопки мыши, отключение подложки и отрисовка карточек под другими
+    -OnMouseDrag() : void // Ведение мыши, следование карточки за мышью 
+    -Update() : void // Обработка перемещения карточки
+    -Awake() : void // Установка MouseSpeed, RealStartPoz, StartPose, StartScale, EndScale, SR, Glow
+    -OnTriggerExit2D(Collider2D collision) : void // При отжатии кнопки мыши возможно помещение карточки на доску, иначе CurrentColiderTag = null
+    -OnTriggerStay2D(Collider2D collision) : void // Установка CurrentColiderTag
+}
++class One{
+    +InitializePrice() : void // Установка цены ОД
+    +GetSizeMultipler_Float() : float // Возврат множителя размера
+    +GetCover_Sprite() : Sprite // Возврат спрайта для отображения карточки
+}
++class Two{
+    +InitializePrice() : void // Установка цены ОД
+    +GetSizeMultipler_Float() : float // Возврат множителя размера
+    +GetCover_Sprite() : Sprite // Возврат спрайта для отображения карточки
+}
++class ActionsCardStart{
+    +SetPowerMultiplyValue(int value = 1) : void // Установка PowerMultiplyValue
+    +Actions(bool ToEnemy = false) : void // Действие карточки, вызов SetPowerMultiplyValue всем карточкам, которые совершают ход
+}
+
+MonoBehaviour --|> Internal
+MonoBehaviour --|> Settings
+MonoBehaviour --|> TurnManager
+MonoBehaviour --|> HotButton
+MonoBehaviour --|> HealthManager
+MonoBehaviour --|> BaseForActions
+MonoBehaviour --|> BaseForCards
+MonoBehaviour --|> Desk
+MonoBehaviour --|> Card
+MonoBehaviour --|> CardsCombineManager
+MonoBehaviour --|> GrabCardMouse
+
+BaseForActions --|> HealAction
+BaseForActions --|> ActionsCardStart
+
+BaseForCards --|> CardStart
+BaseForCards --|> StartCard
+BaseForCards --|> One
+BaseForCards --|> Two
+
+@enduml
